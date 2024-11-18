@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Meaning Query</title>
+    <style>
+        /* 页面整体设置 */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #00f260, #0575E6); /* 霓虹色彩渐变背景 */
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 设置简约风格的容器 */
+        .container {
+            background-color: rgba(255, 255, 255, 0.1); /* 半透明卡片背景，营造呼吸感 */
+            backdrop-filter: blur(10px); /* 苹果风格的磨砂玻璃效果 */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); /* 现代阴影效果 */
+            border-radius: 15px;
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+            color: #fff; /* 字体色 */
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* 鼠标悬停时的轻微动画，增加呼吸感 */
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+        }
+
+        /* 标题样式，简约优雅 */
+        h2 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        /* 输入框样式 */
+        textarea#wordInput {
+            width: 100%;
+            min-height: 100px;
+            max-height: 200px;
+            padding: 12px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            outline: none;
+            margin-bottom: 20px;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        textarea#wordInput:focus {
+            background-color: rgba(255, 255, 255, 0.4);
+            border-color: #00f260;
+        }
+
+        /* 按钮样式 */
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00f260; /* 霓虹色彩 */
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            margin-bottom: 10px; /* 添加一些间距 */
+        }
+
+        /* 鼠标悬停按钮时 */
+        button:hover {
+            background-color: #0575E6; /* 霓虹色变化 */
+        }
+
+        /* 进度条容器 */
+        #progressBar {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
+            border-radius: 25px;
+            overflow: hidden;
+            height: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 进度条填充部分 */
+        #progressFill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(135deg, #00f260, #0575E6); /* 霓虹色彩渐变 */
+            transition: width 0.3s ease-in-out;
+        }
+
+        /* 结果区域样式 */
+        #result {
+            height: 150px;
+            overflow-y: auto; /* 可滑动 */
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
+            border-radius: 10px;
+        }
+
+        /* 结果文本 */
+        #result p {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        /* 响应式设，适配不同屏幕 */
+        @media (max-width: 480px) {
+            .container {
+                width: 90%;
+                padding: 20px;
+            }
+        }
+
+        /* 添加按钮组样式 */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        /* 历史记录面板样式 */
+        #historyPanel {
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 400px; /* 设置最大高度 */
+            overflow-y: auto; /* 添加垂直滚动条 */
+        }
+        
+        /* 美化滚动条样式 */
+        textarea#wordInput::-webkit-scrollbar,
+        #historyPanel::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        textarea#wordInput::-webkit-scrollbar-track,
+        #historyPanel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        textarea#wordInput::-webkit-scrollbar-thumb,
+        #historyPanel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        
+        textarea#wordInput::-webkit-scrollbar-thumb:hover,
+        #historyPanel::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .history-item {
+            padding: 10px;
+            padding-right: 80px; /* 为删除按钮留出空间 */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* 修改删除按钮样式 */
+        .delete-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 24px;
+            transition: color 0.3s;
+        }
+        
+        .delete-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* 历史记录标题区域 */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        /* 清空按钮样式 */
+        #clearHistory {
+            background-color: rgba(255, 0, 0, 0.2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #clearHistory:hover {
+            background-color: rgba(255, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Word Meaning Query Tool</h2>
+    <textarea id="wordInput" placeholder="Enter words (5 per line)" style="width: 300px; height: 100px;"></textarea>
+    <div class="button-group">
+        <button id="submit">Query</button>
+        <button id="save">Save</button>
+        <button id="history">History</button>
+        <button id="donate">打赏</button>
+    </div>
+
+    <div id="progressBar">
+        <div id="progressFill"></div>
+    </div>
+
+    <div id="result"></div>
+    
+    <!-- 添加历史记录面板 -->
+    <div id="historyPanel" style="display: none;">
+        <div class="history-header">
+            <h3>Query History</h3>
+            <button id="clearHistory">Clear All</button>
+        </div>
+        <div id="historyContent"></div>
+    </div>
+</div>
+
+<script>
+// 缓存对象
+const wordCache = {
+    // 从localStorage加载缓存
+    load() {
+        const cached = localStorage.getItem('wordCache');
+        return cached ? JSON.parse(cached) : {};
+    },
+    
+    // 保存缓存到localStorage
+    save(cache) {
+        localStorage.setItem('wordCache', JSON.stringify(cache));
+    }
+};
+
+// 历史记录对象
+const queryHistory = {
+    // 从localStorage加载历史记录
+    load() {
+        const history = localStorage.getItem('queryHistory');
+        return history ? JSON.parse(history) : [];
+    },
+    
+    // 保存历史记录
+    save(records) {
+        localStorage.setItem('queryHistory', JSON.stringify(records));
+    },
+    
+    // 添加新记录
+    add(words, meanings) {
+        const records = this.load();
+        const newRecord = {
+            words,
+            meanings,
+            timestamp: new Date().toISOString()
+        };
+        records.unshift(newRecord); // 添加到开头
+        
+        // 限制记录数量为50条
+        if (records.length > 50) {
+            records.pop();
+        }
+        
+        this.save(records);
+    },
+    
+    // 删除单条记录
+    delete(timestamp) {
+        const records = this.load();
+        const newRecords = records.filter(record => record.timestamp !== timestamp);
+        this.save(newRecords);
+    },
+    
+    // 清空所有记录
+    clear() {
+        this.save([]);
+    }
+};
+
+// 修改查询函数
+document.getElementById('submit').addEventListener('click', async () => {
+    const words = document.getElementById('wordInput').value.trim();
+    if (!words) {
+        alert('请输入至少一个单词');
+        return;
+    }
+
+    const wordList = words.split(/\s+/);
+    const apiKey = 'sk-1qXYdonMoHbZbGkmD5B13514Fb484315901a0a149002A7Af';
+    const url = 'https://translate.jayogo.com/v1/chat/completions';
+    const progressBarFill = document.getElementById('progressFill');
+    const resultContainer = document.getElementById('result');
+    
+    resultContainer.innerHTML = '';
+    
+    // 加载缓存
+    const cache = wordCache.load();
+    const results = [];
+
+    for (let i = 0; i < wordList.length; i++) {
+        const word = wordList[i];
+        let output;
+
+        // 检查缓存
+        if (cache[word]) {
+            output = cache[word].meaning;
+        } else {
+            const data = {
+                model: "gemini-1.5-pro-latest",
+                messages: [
+                    { role: "system", content: "请根据输入内容执行相应操作。如果输入是中文，请翻译成英文（5个）；如果输入是单词，请提供其所有的中文含义，不需要具体解释。" },
+                    { role: "user", content: `${word}` }
+                ]
+            };
+
+            try {
+                progressBarFill.style.width = `${((i + 1) / wordList.length) * 100}%`;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! 状态: ${response.status}`);
+                }
+
+                const result = await response.json();
+                output = result.choices[0].message.content.trim();
+                
+                // 更新缓存
+                cache[word] = {
+                    meaning: output,
+                    timestamp: new Date().toISOString()
+                };
+            } catch (error) {
+                output = `查询错误: ${error.message}`;
+            }
+        }
+
+        results.push({ word, meaning: output });
+
+        const newResult = document.createElement('p');
+        const audioButton = document.createElement('button');
+        audioButton.textContent = '发音';
+        audioButton.style.marginLeft = '10px';
+        audioButton.addEventListener('click', () => {
+            const audio = new Audio(`http://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}`);
+            audio.play().catch(err => {
+                console.error('播放音频失败:', err);
+            });
+        });
+
+        newResult.innerHTML = `<strong>${i + 1}. ${word}:</strong> ${output}`;
+        newResult.appendChild(audioButton);
+        resultContainer.appendChild(newResult);
+    }
+
+    // 保存缓存
+    wordCache.save(cache);
+});
+
+// 保存按钮事件
+document.getElementById('save').addEventListener('click', () => {
+    const resultContainer = document.getElementById('result');
+    if (!resultContainer.innerHTML.trim()) {
+        alert('没有可保存的查询结果');
+        return;
+    }
+
+    const words = document.getElementById('wordInput').value.trim();
+    const meanings = Array.from(resultContainer.children).map(p => {
+        const text = p.innerHTML.split('</strong>');
+        return {
+            word: text[0].replace(/<strong>\d+\.\s/, '').replace(':', ''),
+            meaning: text[1].split('<button')[0].trim()
+        };
+    });
+
+    queryHistory.add(words, meanings);
+});
+
+// 历史记录按钮事件
+document.getElementById('history').addEventListener('click', () => {
+    const historyPanel = document.getElementById('historyPanel');
+    const historyContent = document.getElementById('historyContent');
+    
+    if (historyPanel.style.display === 'none') {
+        const records = queryHistory.load();
+        historyContent.innerHTML = records.map((record) => `
+            <div class="history-item">
+                <span class="delete-btn" data-timestamp="${record.timestamp}">×</span>
+                <div><strong>查询时间:</strong> ${new Date(record.timestamp).toLocaleString()}</div>
+                ${record.meanings.map(m => `<div>${m.word}: ${m.meaning}</div>`).join('')}
+            </div>
+        `).join('');
+        
+        // 添加删除按钮事件监听
+        historyContent.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const timestamp = e.target.dataset.timestamp;
+                queryHistory.delete(timestamp);
+                // 重新渲染历史记录
+                document.getElementById('history').click();
+                document.getElementById('history').click();
+            });
+        });
+        
+        historyPanel.style.display = 'block';
+    } else {
+        historyPanel.style.display = 'none';
+    }
+});
+
+// 添加清空历史记录按钮事件
+document.getElementById('clearHistory').addEventListener('click', () => {
+    queryHistory.clear();
+    // 重新渲染历史记录
+    document.getElementById('history').click();
+    document.getElementById('history').click();
+});
+
+// 打赏按钮事件
+document.getElementById('donate').addEventListener('click', () => {
+    window.open('donate.html', '_blank');
+});
+
+// Replace the existing word grouping functionality with this improved version
+document.getElementById('wordInput').addEventListener('keydown', function(e) {
+    // Allow normal typing for most keys
+    if (e.key !== ' ' && e.key !== 'Enter') {
+        return;
+    }
+
+    const textarea = e.target;
+    const cursorPos = textarea.selectionStart;
+    const text = textarea.value;
+    
+    // Get current line content up to cursor
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const lines = textBeforeCursor.split('\n');
+    const currentLine = lines[lines.length - 1];
+    const wordsInCurrentLine = currentLine.trim().split(/\s+/).filter(word => word.length > 0);
+
+    // If we have 5 words and user presses space, add a newline
+    if (wordsInCurrentLine.length >= 5 && e.key === ' ') {
+        e.preventDefault();
+        const textAfterCursor = text.substring(cursorPos);
+        textarea.value = text.substring(0, cursorPos) + '\n' + textAfterCursor;
+        textarea.setSelectionRange(cursorPos + 1, cursorPos + 1);
+    }
+    // If user presses Enter, ensure the previous line has 5 words if possible
+    else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (wordsInCurrentLine.length > 0 && wordsInCurrentLine.length < 5) {
+            // Don't force newline if line is not complete
+            const textAfterCursor = text.substring(cursorPos);
+            textarea.value = text.substring(0, cursorPos) + ' ' + textAfterCursor;
+            textarea.setSelectionRange(cursorPos + 1, cursorPos + 1);
+        } else {
+            const textAfterCursor = text.substring(cursorPos);
+            textarea.value = text.substring(0, cursorPos) + '\n' + textAfterCursor;
+            textarea.setSelectionRange(cursorPos + 1, cursorPos + 1);
+        }
+    }
+});
+</script>
+
+</body>
+</html>

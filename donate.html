@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate</title>
+    <style>
+        /* 页面整体设置 */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #00f260, #0575E6); /* 霓虹色彩渐变背景 */
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            justify-content: center;
+        }
+
+        /* 打赏容器 */
+        .donate-container {
+            background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+            backdrop-filter: blur(10px); /* 磨砂玻璃效果 */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        /* 标题样式 */
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        /* 图片样式 */
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 20px;
+            border: 2px solid #fff;
+            border-radius: 10px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .qr-code {
+                width: 150px;
+                height: 150px;
+                margin: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="donate-container">
+    <h2>感谢您的支持</h2>
+    <p>打赏完包过的：</p>
+    <div>
+        <img src="wechat_qr.png" alt="微信打赏" class="qr-code">
+        <img src="alipay_qr.png" alt="支付宝打赏" class="qr-code">
+    </div>
+</div>
+
+</body>
+</html>
