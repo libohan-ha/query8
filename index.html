@@ -335,9 +335,40 @@ document.getElementById('submit').addEventListener('click', async () => {
     const cache = wordCache.load();
     const results = [];
 
+    // 添加延迟函数
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
     for (let i = 0; i < wordList.length; i++) {
         const word = wordList[i];
         let output;
+        let phonetic = '';
+
+        // 尝试获取音标，添加重试机制
+        for (let retryCount = 0; retryCount < 3; retryCount++) {
+            try {
+                const phoneticResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                if (phoneticResponse.ok) {
+                    const phoneticData = await phoneticResponse.json();
+                    // 获取音标，如果有的话
+                    if (phoneticData[0] && phoneticData[0].phonetic) {
+                        phonetic = phoneticData[0].phonetic;
+                        break; // 成功获取音标，退出重试循环
+                    } else if (phoneticData[0] && phoneticData[0].phonetics && phoneticData[0].phonetics.length > 0) {
+                        // 尝试从 phonetics 数组中获取
+                        const phoneticText = phoneticData[0].phonetics.find(p => p.text)?.text;
+                        if (phoneticText) {
+                            phonetic = phoneticText;
+                            break; // 成功获取音标，退出重试循环
+                        }
+                    }
+                }
+                // 如果没有成功获取音标，等待后重试
+                await delay(500);
+            } catch (error) {
+                console.error('获取音标失败:', error);
+                await delay(500); // 失败后等待后重试
+            }
+        }
 
         // 检查缓存
         if (cache[word]) {
@@ -380,7 +411,7 @@ document.getElementById('submit').addEventListener('click', async () => {
             }
         }
 
-        results.push({ word, meaning: output });
+        results.push({ word, meaning: output, phonetic });
 
         const newResult = document.createElement('p');
         const audioButton = document.createElement('button');
@@ -393,7 +424,9 @@ document.getElementById('submit').addEventListener('click', async () => {
             });
         });
 
-        newResult.innerHTML = `<strong>${i + 1}. ${word}:</strong> ${output}`;
+        // 添加音标显示，改为黑色
+        const phoneticDisplay = phonetic ? ` ${phonetic} ` : ' ';
+        newResult.innerHTML = `<strong>${i + 1}. ${word}</strong><span style="color: #000">${phoneticDisplay}</span>: ${output}`;
         newResult.appendChild(audioButton);
         resultContainer.appendChild(newResult);
     }
